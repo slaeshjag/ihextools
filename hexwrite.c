@@ -31,6 +31,7 @@ freely, subject to the following restrictions:
 
 uint8_t *bin_to_hex_lut = (uint8_t *) "0123456789ABCDEF";
 static uint32_t next_base;
+static int record_width = 32;
 
 
 static void _bin_to_hex(uint8_t bin, uint8_t *hex) {
@@ -71,7 +72,7 @@ static void _hex_write_aligned(uint8_t *data, int bytes, FILE *out, int addr_low
 static void _write_file(FILE *out, uint32_t base, char *fname) {
 	FILE *in;
 	int chunk, read;
-	uint8_t data[32];
+	uint8_t data[record_width];
 
 	if (!(in = fopen(fname, "rb"))) {
 		fprintf(stderr, "Unable to open file '%s'\n", fname);
@@ -79,7 +80,7 @@ static void _write_file(FILE *out, uint32_t base, char *fname) {
 	}
 
 	for (; !feof(in); base += read) {
-		chunk = 32 - (base & 0x1F);
+		chunk = record_width - (base & (record_width - 1));
 		if ((next_base & 0xFFFF0000) != (base & 0xFFFF0000)) {
 			uint8_t upper[2];
 			upper[0] = base >> 24;
@@ -117,6 +118,9 @@ void handle_one_argument(char *arg, FILE *out) {
 		addr[3] = base;
 		_hex_write_aligned(addr, 4, out, 0, 5);
 		return;
+	} else if (strstr(arg, "record_width=") == arg) {
+		sscanf(arg, "record_width=%i", &record_width);
+		return;
 	} else {
 		fprintf(stderr, "Unhandled argument %s\n", arg);
 		return;
@@ -138,6 +142,8 @@ int usage() {
 	fprintf(stdout, "\t\teg. input=arne.bin\n");
 	fprintf(stdout, "\tentry_point=addr\n");
 	fprintf(stdout, "\t\teg. entry_point=deadbeef - Sets entry point to 0xDEADBEEF\n");
+	fprintf(stdout, "\trecord_width=num - Sets the number of data bytes written at a time, in decimal - Must be a power of 2\n");
+	fprintf(stdout, "\t\teg. record_width=32\n");
 
 	return 1;
 }
