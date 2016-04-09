@@ -80,7 +80,7 @@ static void _write_file(FILE *out, uint32_t base, char *fname) {
 	}
 
 	for (; !feof(in); base += read) {
-		chunk = record_width - (base & (record_width - 1));
+		chunk = record_width - (base % record_width);
 		if ((next_base & 0xFFFF0000) != (base & 0xFFFF0000)) {
 			uint8_t upper[2];
 			upper[0] = base >> 24;
@@ -142,7 +142,7 @@ int usage() {
 	fprintf(stdout, "\t\teg. input=arne.bin\n");
 	fprintf(stdout, "\tentry_point=addr\n");
 	fprintf(stdout, "\t\teg. entry_point=deadbeef - Sets entry point to 0xDEADBEEF\n");
-	fprintf(stdout, "\trecord_width=num - Sets the number of data bytes written at a time, in decimal - Must be a power of 2\n");
+	fprintf(stdout, "\trecord_width=num - Sets the number of data bytes written at a time, in decimal\n");
 	fprintf(stdout, "\t\teg. record_width=32\n");
 
 	return 1;
