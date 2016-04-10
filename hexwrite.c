@@ -32,6 +32,7 @@ freely, subject to the following restrictions:
 uint8_t *bin_to_hex_lut = (uint8_t *) "0123456789ABCDEF";
 static uint32_t next_base;
 static int record_width = 32;
+static int word_size = 1;
 
 
 static void _bin_to_hex(uint8_t bin, uint8_t *hex) {
@@ -73,14 +74,15 @@ static void _write_file(FILE *out, uint32_t base, char *fname) {
 	FILE *in;
 	int chunk, read;
 	uint8_t data[record_width];
+	uint32_t counter = base;
 
 	if (!(in = fopen(fname, "rb"))) {
 		fprintf(stderr, "Unable to open file '%s'\n", fname);
 		return;
 	}
 
-	for (; !feof(in); base += read) {
-		chunk = record_width - (base % record_width);
+	for (; !feof(in); base += read / word_size, counter += read) {
+		chunk = record_width - (counter % record_width);
 		if ((next_base & 0xFFFF0000) != (base & 0xFFFF0000)) {
 			uint8_t upper[2];
 			upper[0] = base >> 24;
@@ -121,6 +123,9 @@ void handle_one_argument(char *arg, FILE *out) {
 	} else if (strstr(arg, "record_width=") == arg) {
 		sscanf(arg, "record_width=%i", &record_width);
 		return;
+	} else if (strstr(arg, "word_size=") == arg) {
+		sscanf(arg, "word_size=%i", &word_size);
+		return;
 	} else {
 		fprintf(stderr, "Unhandled argument %s\n", arg);
 		return;
@@ -144,6 +149,7 @@ int usage() {
 	fprintf(stdout, "\t\teg. entry_point=deadbeef - Sets entry point to 0xDEADBEEF\n");
 	fprintf(stdout, "\trecord_width=num - Sets the number of data bytes written at a time, in decimal\n");
 	fprintf(stdout, "\t\teg. record_width=32\n");
+	fprintf(stdout, "\tword_size=num - Sets the word size for the address counter. Some 'special' implementations require this\n");
 
 	return 1;
 }
