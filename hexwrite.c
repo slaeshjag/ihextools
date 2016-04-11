@@ -91,7 +91,10 @@ static void _write_file(FILE *out, uint32_t base, char *fname) {
 			next_base = base & 0xFFFF0000;
 		}
 
+		memset(data, 0, chunk);
 		read = fread(data, 1, chunk, in);
+		if (read % word_size)
+			read /= word_size, read++, read *= word_size;
 		if (read)
 			_hex_write_aligned(data, read, out, base & 0xFFFF, 0);
 	}
