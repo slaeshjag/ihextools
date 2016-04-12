@@ -23,6 +23,10 @@ freely, subject to the following restrictions:
 */
 
 //#include <stdint.h>
+#ifdef HIGHLEVEL
+#include <stdio.h>
+#endif
+
 #define	uint8_t unsigned char
 #define	uint32_t unsigned int
 #define	uint16_t unsigned short
@@ -40,18 +44,22 @@ enum HexloadState {
 };
 
 
-uint8_t buff[256];
+#ifdef HIGHLEVEL
+uint8_t buff[384000];
+#endif
 
 
+#ifndef HIGHLEVEL
 extern inline uint8_t fetch_byte() {
 	while(!(*((volatile uint32_t *) 0x100004) & 0x2));
 	
 	return *((volatile uint32_t *) 0x100000);
 }
-
-/*static uint8_t fetch_byte() {
+#else
+static uint8_t fetch_byte() {
 	return getc(stdin);
-}*/
+}
+#endif
 
 
 void loadhex() {
@@ -144,23 +152,32 @@ void loadhex() {
 			decoded |= byte - 0x30;
 	}
 
+#ifndef HIGHLEVEL
 	load_done:
 	/* Jump to entry point */
 	goto *entry_point;
 
 	error:
+	(void) *buff;
 	for (;;);
+#else
+	load_done:
+	error:
+	(void) 0;
+#endif
 }
 
 
-#if 0
+#ifdef HIGHLEVEL
 int main(int argc, char **argv) {
 	int i;
+	FILE *fp;
 	fprintf(stderr, "%p\n", buff);
 	loadhex();
+	fp = fopen("/tmp/arne.bin", "w");
 
-	for (i = 0; i < 256; i++) {
-		fputc(buff[i], stdout);
+	for (i = 0; i < 384000; i++) {
+		fputc(buff[i], fp);
 	}
 }
 #endif
