@@ -27,8 +27,6 @@ freely, subject to the following restrictions:
 #define	uint32_t unsigned int
 #define	uint16_t unsigned short
 
-#define	FETCH_BYTE(output)		((output = *(((uint8_t *) (0x2424ff00)))))
-
 /* XXX: This loader will only work on 32 bit systems! */
 
 enum HexloadState {
@@ -40,6 +38,20 @@ enum HexloadState {
 	HEXLOAD_STATE_CHECKSUM,
 	HEXLOAD_STATE_SKIP,
 };
+
+
+uint8_t buff[256];
+
+
+static uint8_t fetch_byte() {
+	while(!(*((volatile void *) 0x100004) & 0x2));
+	
+	return *((volatile void *) 0x100000);
+}
+
+/*static uint8_t fetch_byte() {
+	return getc(stdin);
+}*/
 
 
 void loadhex() {
@@ -57,9 +69,12 @@ void loadhex() {
 	for (count = 0;; count++) {
 		switch (state) {
 			case HEXLOAD_STATE_INIT:
-				if (FETCH_BYTE(byte), byte != ':')
+				if ((byte = fetch_byte()) != ':') {
+					if (byte == '\n')
+						continue;
 					state = HEXLOAD_STATE_SKIP;
-				else {
+					continue;
+				} else {
 					state = HEXLOAD_STATE_BYTE;
 				}
 					
@@ -76,6 +91,7 @@ void loadhex() {
 					addr |= decoded;
 					state = HEXLOAD_STATE_TYPE;
 				}
+
 				break;
 			case HEXLOAD_STATE_TYPE:
 				type = decoded;
@@ -84,7 +100,7 @@ void loadhex() {
 				break;
 			case HEXLOAD_STATE_DATA:
 				if (type == 0)
-					next[addr] = decoded;
+					next[addr] = decoded, addr++;
 				else if (type == 1) {
 					goto load_done;
 				} else if (type == 4) {
@@ -104,23 +120,26 @@ void loadhex() {
 			case HEXLOAD_STATE_CHECKSUM:
 				//TODO: Check checksum
 				state = HEXLOAD_STATE_SKIP;
+				continue;
 				break;
 			case HEXLOAD_STATE_SKIP:
-				if (FETCH_BYTE(byte), byte == '\n')
+				if (((byte = fetch_byte())) == '\n')
 					state = HEXLOAD_STATE_INIT;
+					continue;
+				continue;
 				break;
 		}
 
 		/* Decode a byte */
-		FETCH_BYTE(byte);
+		byte = fetch_byte();
 		if (byte > '9')
-			decoded = (byte - 0x38);
+			decoded = (byte - 0x37);
 		else
 			decoded = byte - 0x30;
 		decoded <<= 4;
-		FETCH_BYTE(byte);
+		byte = fetch_byte();
 		if (byte > '9')
-			decoded |= (byte - 0x38);
+			decoded |= (byte - 0x37);
 		else
 			decoded |= byte - 0x30;
 	}
@@ -132,3 +151,16 @@ void loadhex() {
 	error:
 	for (;;);
 }
+
+
+#if 0
+int main(int argc, char **argv) {
+	int i;
+	fprintf(stderr, "%p\n", buff);
+	loadhex();
+
+	for (i = 0; i < 256; i++) {
+		fputc(buff[i], stdout);
+	}
+}
+#endif
