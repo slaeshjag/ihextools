@@ -43,10 +43,10 @@ enum HexloadState {
 uint8_t buff[256];
 
 
-static uint8_t fetch_byte() {
-	while(!(*((volatile void *) 0x100004) & 0x2));
+extern inline uint8_t fetch_byte() {
+	while(!(*((volatile uint32_t *) 0x100004) & 0x2));
 	
-	return *((volatile void *) 0x100000);
+	return *((volatile uint32_t *) 0x100000);
 }
 
 /*static uint8_t fetch_byte() {
