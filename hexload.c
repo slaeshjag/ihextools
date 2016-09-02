@@ -155,7 +155,8 @@ void loadhex() {
 #ifndef HIGHLEVEL
 	load_done:
 	/* Jump to entry point */
-	goto *entry_point;
+	if (entry_point != (void) 0xFFFFFFFF)
+		goto *entry_point;
 
 	error:
 	(void) *buff;
