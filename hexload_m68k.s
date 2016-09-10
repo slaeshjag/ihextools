@@ -17,7 +17,7 @@ loadhex:
 	move.l %d2, -(%sp)
 	eor.l %d1, %d1
 	move.l %d1, %a0
-	move.l #-1, %a0
+	move.l #-1, %a1
 _loadhex_line:
 	bsr get_byte
 	cmp.b #58, %d0
