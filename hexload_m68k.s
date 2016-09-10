@@ -23,15 +23,16 @@ _loadhex_line:
 	cmp.b #58, %d0
 	jne _skip
 ## Load byte count
-	bsr decode_pair
+	bsr.b decode_pair
 	move.w %d0, %d2
 ## Load low address
-	bsr decode_word
+	bsr.b decode_word
 	move.w %d0, %a0
 ## Load record type
-	bsr decode_pair
-	
-	cmp.b #0, %d0
+	bsr.b decode_pair
+
+	# tst compares with 0
+	tst.b %d0
 	jeq _read_data
 	cmp.b #1, %d0
 	jeq _end_of_file
@@ -40,10 +41,10 @@ _loadhex_line:
 	cmp.b #5, %d0
 	jeq _entry_point
 _skip:
-	bsr get_byte
+	bsr.b get_byte
 	cmp.b #10, %d0
 	jne _skip
-	btst #0, %d1
+	tst %d1
 	jeq _loadhex_line
 _done:
 	eor.l %d0, %d0
@@ -60,36 +61,36 @@ _returned:
 	rts
 
 _read_data:
-	cmp.b #0, %d2
+	tst.b %d2
 	jeq _skip
-	bsr decode_pair
+	bsr.b decode_pair
 	sub.b #1, %d2
 	move.b %d0, (%a0)+
 	jra _read_data
 _upper_address:
-	bsr decode_word
+	bsr.b decode_word
 	swap %d0
 	move.w %a0, %d0
 	move.l %d0, %a0
 	jra _skip
 _entry_point:
-	bsr decode_word
+	bsr.b decode_word
 	swap %d0
 	move.l %d0, %a1
-	bsr decode_word
+	bsr.b decode_word
 	move.w %d0, %a1
 	jra _skip
 _end_of_file:
-	move.b #1, %d1
+	not.b %d1
 	jra _skip
 
 
 decode_word:
 	move.l %d2, -(%sp)
 	
-	bsr decode_pair
+	bsr.b decode_pair
 	move.l %d0, %d2
-	bsr decode_pair
+	bsr.b decode_pair
 	lsl.w #8, %d2
 	or.w %d2, %d0
 	
@@ -99,9 +100,9 @@ decode_word:
 decode_pair:
 	move.l %d2, -(%sp)
 
-	bsr decode_byte
+	bsr.b decode_byte
 	move.l %d0, %d2
-	bsr decode_byte
+	bsr.b decode_byte
 	lsl.b #4, %d2
 	or.b %d2, %d0
 
@@ -109,7 +110,7 @@ decode_pair:
 	rts
 
 decode_byte:
-	bsr get_byte
+	bsr.b get_byte
 	cmp.b #57, %d0
 	jle _decode_byte_lower
 	add.b #-7, %d0
