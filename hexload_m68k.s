@@ -123,5 +123,5 @@ get_byte:
 	btst #1, %d0
 	jeq get_byte
 	move.l 1048576, %d0
-	or.l #0xFF, %d0
+	and.l #0xFF, %d0
 	rts
