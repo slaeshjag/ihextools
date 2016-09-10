@@ -24,7 +24,7 @@ _loadhex_line:
 	jne _skip
 ## Load byte count
 	bsr.b decode_pair
-	move.w %d0, %d2
+	move.b %d0, %d2
 ## Load low address
 	bsr.b decode_word
 	move.w %d0, %a0
@@ -54,10 +54,10 @@ _done:
 	jsr (%a1)
 _returned:
 ## Now return back to caller of hexload
-	move.l %d2, (%sp)+
-	move.l %d1, (%sp)+
-	move.l %a1, (%sp)+
-	move.l %a0, (%sp)+
+	move.l (%sp)+, %d1
+	move.l (%sp)+, %d2
+	move.l (%sp)+, %a1
+	move.l (%sp)+, %a0
 	rts
 
 _read_data:
