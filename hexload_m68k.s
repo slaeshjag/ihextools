@@ -15,6 +15,7 @@ loadhex:
 	move.l %a1, -(%sp)
 	move.l %d1, -(%sp)
 	move.l %d2, -(%sp)
+	move.l %d3, -(%sp)
 	eor.l %d1, %d1
 	move.l %d1, %a0
 	move.l #-1, %a1
@@ -27,7 +28,9 @@ _loadhex_line:
 	move.b %d0, %d2
 ## Load low address
 	bsr.b decode_word
-	move.w %d0, %a0
+	move.l %a0, %d3
+	move.w %d0, %d3
+	move.l %d3, %a0
 ## Load record type
 	bsr.b decode_pair
 
@@ -54,8 +57,9 @@ _done:
 	jsr (%a1)
 _returned:
 ## Now return back to caller of hexload
-	move.l (%sp)+, %d1
+	move.l (%sp)+, %d3
 	move.l (%sp)+, %d2
+	move.l (%sp)+, %d1
 	move.l (%sp)+, %a1
 	move.l (%sp)+, %a0
 	rts
@@ -70,15 +74,17 @@ _read_data:
 _upper_address:
 	bsr.b decode_word
 	swap %d0
-	move.w %a0, %d0
+	move.w %a0, %d3
+	move.w %d3, %d0
 	move.l %d0, %a0
 	jra _skip
 _entry_point:
 	bsr.b decode_word
 	swap %d0
-	move.l %d0, %a1
+	move.l %a1, %d3
 	bsr.b decode_word
-	move.w %d0, %a1
+	move.w %d0, %d3
+	move.l %d3, %a0
 	jra _skip
 _end_of_file:
 	not.b %d1
