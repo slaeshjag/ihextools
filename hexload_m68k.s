@@ -81,10 +81,10 @@ _upper_address:
 _entry_point:
 	bsr.b decode_word
 	swap %d0
-	move.l %a1, %d3
+	move.l %d0, %d3
 	bsr.b decode_word
 	move.w %d0, %d3
-	move.l %d3, %a0
+	move.l %d3, %a1
 	jra _skip
 _end_of_file:
 	not.b %d1
